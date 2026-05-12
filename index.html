@@ -1021,7 +1021,7 @@ async function cekDataBaru() {
   try {
     let dataBaru = [];
     try {
-      const res  = await fetch(SCRIPT_URL + '?action=getData&t=' + Date.now());
+      const res  = await fetch(SCRIPT_URL + '?action=getData&t=' + Date.now(), { redirect: 'follow', mode: 'cors' });
       const json = await res.json();
       dataBaru   = json.data || [];
     } catch(e) {
