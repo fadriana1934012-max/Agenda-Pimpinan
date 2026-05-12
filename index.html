@@ -686,6 +686,7 @@
         <p id="tgl-sub">Dashboard real-time agenda pimpinan</p>
       </div>
       <button class="btn-refresh" onclick="loadData()">🔄 Refresh Data</button>
+      <button class="btn-refresh" style="background:#C8A400" onclick="cetakLaporan()">🖨️ Cetak Laporan Bulanan</button>
     </div>
 
     <!-- Stat Cards -->
@@ -778,6 +779,18 @@ const CRED = {
   email: "protokoldata@gmail.com",
   passHash: btoa("DinasPariwisata*") // base64 enkripsi sederhana
 };
+
+// ── Fix format waktu ──
+function fixWaktu(waktu) {
+  if (!waktu) return '-';
+  var str = String(waktu);
+  // Bersihkan format "Sat Dec 30 1899 07:57:49 GMT+0655"
+  if (str.indexOf('1899') !== -1 || str.indexOf('Dec 30') !== -1) {
+    var match = str.match(/(\d{2}):(\d{2})/);
+    return match ? match[1] + ':' + match[2] : '-';
+  }
+  return str;
+}
 
 // ── DATA LOKAL (mode offline/demo jika belum ada Web App) ──
 let semuaData = [];
@@ -914,6 +927,7 @@ function renderTabel(data) {
   tbody.innerHTML = data.map(r => {
     const d   = new Date(r.tanggal);
     const tgl = isNaN(d) ? r.tanggal : d.getDate() + ' ' + bulan[d.getMonth()] + ' ' + d.getFullYear();
+    const wkt = fixWaktu(r.waktu);
     const s   = (r.status||'').toUpperCase();
     const kelas = s.includes('SELESAI') ? 'badge-selesai'
                 : s.includes('BATAL')   ? 'badge-batal'
@@ -922,12 +936,13 @@ function renderTabel(data) {
     return `
       <tr>
         <td class="tgl-cell" data-label="Tanggal">${tgl}</td>
-        <td data-label="Waktu">${r.waktu || '-'}</td>
+        <td data-label="Waktu">${wkt}</td>
         <td data-label="Kegiatan"><strong>${r.nama || '-'}</strong>${r.jenis ? '<br><small style="color:#6B7280">'+r.jenis+'</small>' : ''}</td>
         <td data-label="Lokasi">${r.lokasi || '-'}</td>
         <td data-label="PIC">${r.pic || '-'}</td>
         <td data-label="Status"><span class="badge-status ${kelas}">${r.status || '-'}</span></td>
         <td data-label="Calendar" style="text-align:center">${cal}</td>
+        <td data-label="Link Dok">${r.linkDok ? '<a href="'+r.linkDok+'" target="_blank" style="color:#1D7A3A;font-size:12px">📎 Buka</a>' : '-'}</td>
       </tr>`;
   }).join('');
 }
@@ -997,6 +1012,84 @@ function getDemoData() {
     { tanggal: '2025-05-10', waktu: '09:00', jenis: 'Seminar', nama: 'Seminar Pariwisata Sultra', lokasi: 'Hotel Claro', pic: 'Fadriana', status: 'SELESAI', impor: 'SUKSES' },
     { tanggal: '2025-05-08', waktu: '10:00', jenis: 'Rapat', nama: 'Rapat Internal Dinas', lokasi: 'Ruang Rapat', pic: 'All Protokol', status: 'DIBATALKAN', impor: '' },
   ];
+}
+
+// ══════════════════════════════════════════
+//  CETAK LAPORAN BULANAN
+// ══════════════════════════════════════════
+function cetakLaporan() {
+  const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni',
+                     'Juli','Agustus','September','Oktober','November','Desember'];
+  const hari      = new Date();
+  const bulanIni  = hari.getMonth();
+  const tahunIni  = hari.getFullYear();
+
+  const data = semuaData.filter(r => {
+    const d = new Date(r.tanggal);
+    return d.getMonth() === bulanIni && d.getFullYear() === tahunIni;
+  });
+
+  const selesai = data.filter(r => (r.status||'').toUpperCase().includes('SELESAI')).length;
+  const batal   = data.filter(r => (r.status||'').toUpperCase().includes('BATAL')).length;
+  const akan    = data.length - selesai - batal;
+
+  const rows = data.map((r, i) => {
+    const d   = new Date(r.tanggal);
+    const tgl = d.getDate() + ' ' + bulanNama[d.getMonth()] + ' ' + d.getFullYear();
+    const wkt = fixWaktu(r.waktu);
+    const link = r.linkDok ? '<a href="'+r.linkDok+'" target="_blank">'+r.linkDok+'</a>' : '-';
+    return `<tr style="background:${i%2===0?'#fff':'#f9f9f9'}">
+      <td style="padding:8px;border:1px solid #ddd;font-size:12px">${i+1}</td>
+      <td style="padding:8px;border:1px solid #ddd;font-size:12px">${tgl}</td>
+      <td style="padding:8px;border:1px solid #ddd;font-size:12px">${wkt} WITA</td>
+      <td style="padding:8px;border:1px solid #ddd;font-size:12px">${r.jenis||'-'}</td>
+      <td style="padding:8px;border:1px solid #ddd;font-size:12px"><strong>${r.nama||'-'}</strong></td>
+      <td style="padding:8px;border:1px solid #ddd;font-size:12px">${r.lokasi||'-'}</td>
+      <td style="padding:8px;border:1px solid #ddd;font-size:12px">${r.pic||'-'}</td>
+      <td style="padding:8px;border:1px solid #ddd;font-size:12px">${r.status||'-'}</td>
+      <td style="padding:8px;border:1px solid #ddd;font-size:12px">${link}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `
+    <html><head><title>Laporan Bulanan ${bulanNama[bulanIni]} ${tahunIni}</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      h2 { color: #1D7A3A; }
+      table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+      th { background: #1D7A3A; color: white; padding: 8px; font-size: 12px; border: 1px solid #ddd; text-align: left; }
+      .stat { display: flex; gap: 16px; margin: 16px 0; }
+      .stat-box { padding: 12px 20px; border-radius: 8px; color: white; text-align: center; }
+      @media print { button { display: none; } }
+    </style></head>
+    <body>
+      <div style="text-align:center;margin-bottom:20px">
+        <h2>LAPORAN BULANAN AGENDA PIMPINAN</h2>
+        <p style="color:#666">Dinas Pariwisata Sulawesi Tenggara</p>
+        <p style="color:#666">${bulanNama[bulanIni]} ${tahunIni}</p>
+      </div>
+      <div class="stat">
+        <div class="stat-box" style="background:#1D7A3A">Total: <strong>${data.length}</strong></div>
+        <div class="stat-box" style="background:#C8A400">Selesai: <strong>${selesai}</strong></div>
+        <div class="stat-box" style="background:#8B6914">Akan Datang: <strong>${akan}</strong></div>
+        <div class="stat-box" style="background:#C0392B">Batal: <strong>${batal}</strong></div>
+      </div>
+      <table>
+        <tr>
+          <th>No</th><th>Tanggal</th><th>Waktu</th><th>Jenis</th>
+          <th>Nama Kegiatan</th><th>Lokasi</th><th>PIC</th><th>Status</th><th>Link Dok</th>
+        </tr>
+        ${rows}
+      </table>
+      <div style="margin-top:30px;text-align:right;color:#999;font-size:11px">
+        Dicetak: ${new Date().toLocaleDateString('id-ID', {weekday:'long',year:'numeric',month:'long',day:'numeric'})}
+      </div>
+      <button onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#1D7A3A;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px">🖨️ Print / Simpan PDF</button>
+    </body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
 }
 
 // ══════════════════════════════════════════
