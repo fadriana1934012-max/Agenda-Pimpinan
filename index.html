@@ -755,6 +755,7 @@
               <th>PIC</th>
               <th>Status</th>
               <th>Calendar</th>
+              <th>Link Dok</th>
             </tr>
           </thead>
           <tbody id="tabel-body">
@@ -783,13 +784,13 @@ const CRED = {
 // ── Fix format waktu ──
 function fixWaktu(waktu) {
   if (!waktu) return '-';
-  var str = String(waktu);
-  // Bersihkan format "Sat Dec 30 1899 07:57:49 GMT+0655"
-  if (str.indexOf('1899') !== -1 || str.indexOf('Dec 30') !== -1) {
-    var match = str.match(/(\d{2}):(\d{2})/);
-    return match ? match[1] + ':' + match[2] : '-';
-  }
-  return str;
+  var str = String(waktu).trim();
+  if (!str || str === 'undefined') return '-';
+  // Sudah dalam format HH:MM dari WebApp
+  if (/^[0-2]?[0-9]:[0-5][0-9]$/.test(str)) return str;
+  // Bersihkan format panjang
+  var match = str.match(/([0-2]?[0-9]):([0-5][0-9])/);
+  return match ? match[1] + ':' + match[2] : str;
 }
 
 // ── DATA LOKAL (mode offline/demo jika belum ada Web App) ──
@@ -856,8 +857,16 @@ async function loadData() {
 
 // ── RENDER DASHBOARD ──
 function renderDashboard() {
-  const hari    = new Date().toDateString();
-  const harini  = semuaData.filter(r => new Date(r.tanggal).toDateString() === hari);
+  // Format hari ini sebagai YYYY-MM-DD untuk perbandingan akurat
+  const now     = new Date();
+  const yyyy    = now.getFullYear();
+  const mm      = String(now.getMonth()+1).padStart(2,'0');
+  const dd      = String(now.getDate()).padStart(2,'0');
+  const hariIni = yyyy + '-' + mm + '-' + dd;
+  const harini  = semuaData.filter(r => {
+    if (!r.tanggal) return false;
+    return String(r.tanggal).substring(0,10) === hariIni;
+  });
   const selesai = semuaData.filter(r => (r.status||'').toUpperCase().includes('SELESAI'));
   const batal   = semuaData.filter(r => (r.status||'').toUpperCase().includes('BATAL'));
   const akan    = semuaData.filter(r => {
