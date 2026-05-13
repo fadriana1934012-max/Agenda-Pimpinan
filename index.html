@@ -33,7 +33,7 @@
   }
 
   /* ── LOGIN ── */
-  #login-screen {
+  /* #login-screen removed {
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -633,31 +633,7 @@
 </head>
 <body>
 
-<!-- ═══════════════ LOGIN ═══════════════ -->
-<div id="login-screen">
-  <div class="login-card">
-    <div class="login-logo">
-      <div style="width:80px;height:80px;margin:0 auto 16px;border-radius:50%;border:3px solid var(--emas);display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(135deg,#E6F4EA,#FFF8DC)">🏛️</div>
-      <h1>Sistem Informasi &amp;<br>Dokumentasi Agenda Pimpinan</h1>
-      <p>Dinas Pariwisata Sulawesi Tenggara</p>
-      <div style="display:flex;justify-content:center;gap:6px;margin-top:10px">
-        <div style="width:20px;height:4px;background:#1D7A3A;border-radius:2px"></div>
-        <div style="width:20px;height:4px;background:#C8A400;border-radius:2px"></div>
-        <div style="width:20px;height:4px;background:#1A1A1A;border-radius:2px"></div>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Email</label>
-      <input type="email" id="inp-email" placeholder="email@gmail.com" autocomplete="email">
-    </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="btn-login" onclick="doLogin()">Masuk ke Dashboard</button>
-    <div class="error-msg" id="err-msg">Email atau password salah. Silakan coba lagi.</div>
-  </div>
-</div>
+
 
 <!-- ═══════════════ DASHBOARD ═══════════════ -->
 <div id="dashboard">
@@ -672,7 +648,7 @@
     </div>
     <div class="topbar-right">
       <div class="badge-online" id="last-update">Memuat...</div>
-      <button class="btn-logout" onclick="doLogout()">Keluar</button>
+      
     </div>
   </div>
 
@@ -775,11 +751,7 @@
 // ═══════════════════════════════════════════
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRMQKl6ZXbJncuKa0rkxZke2RVFY4Jlhn2sVmc29mMYMk6l0tSKoQt7ERhWv9wdAFqYA/exec";
 
-// Kredensial login (hash sederhana — jangan ubah format)
-const CRED = {
-  email: "protokoldata@gmail.com",
-  passHash: btoa("DinasPariwisata*") // base64 enkripsi sederhana
-};
+
 
 // ── Fix format waktu ──
 function fixWaktu(waktu) {
@@ -797,33 +769,6 @@ function fixWaktu(waktu) {
 let semuaData = [];
 let kalBulan  = new Date().getMonth();
 let kalTahun  = new Date().getFullYear();
-
-// ── LOGIN ──
-function doLogin() {
-  const email = document.getElementById('inp-email').value.trim();
-  const pass  = document.getElementById('inp-pass').value;
-  const err   = document.getElementById('err-msg');
-
-  if (email === CRED.email && btoa(pass) === CRED.passHash) {
-    sessionStorage.setItem('loggedIn', '1');
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    initDashboard();
-  } else {
-    err.style.display = 'block';
-    setTimeout(() => err.style.display = 'none', 3000);
-  }
-}
-
-document.getElementById('inp-pass').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doLogin();
-});
-
-function doLogout() {
-  sessionStorage.removeItem('loggedIn');
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('dashboard').style.display = 'none';
-}
 
 // ── INIT ──
 function initDashboard() {
@@ -1281,23 +1226,18 @@ document.head.appendChild(styleEl);
 
 // ── CEK SESSION ──
 if (sessionStorage.getItem('loggedIn') === '1') {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
+  
+  
   initDashboard();
 }
 
-// Override initDashboard untuk aktifkan realtime
-const _initAsli = initDashboard;
-initDashboard = function() {
-  _initAsli();
-  setTimeout(() => {
-    jumlahDataSebelumnya = semuaData.length;
-    namaDataSebelumnya   = new Set(semuaData.map(r => r.nama + r.tanggal));
-    mulaiRealtime();
-    // Minta izin notifikasi
-    if ('Notification' in window) Notification.requestPermission();
-  }, 2000);
-};
+// Aktifkan realtime setelah load
+setTimeout(() => {
+  jumlahDataSebelumnya = semuaData.length;
+  namaDataSebelumnya   = new Set(semuaData.map(r => r.nama + r.tanggal));
+  mulaiRealtime();
+  if ('Notification' in window) Notification.requestPermission();
+}, 2000);
 </script>
 </body>
 </html>
