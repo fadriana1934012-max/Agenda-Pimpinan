@@ -146,7 +146,7 @@
   }
 
   /* ── DASHBOARD ── */
-  #dashboard { display: none; }
+  #dashboard { display: block; }
 
   .topbar {
     background: white;
@@ -1225,11 +1225,7 @@ styleEl.textContent = `
 document.head.appendChild(styleEl);
 
 // ── CEK SESSION ──
-if (sessionStorage.getItem('loggedIn') === '1') {
-  
-  
-  initDashboard();
-}
+
 
 // Aktifkan realtime setelah load
 setTimeout(() => {
