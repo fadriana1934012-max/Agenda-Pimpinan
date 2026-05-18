@@ -566,6 +566,97 @@
 
   .kosong .ikon { font-size: 32px; margin-bottom: 8px; }
 
+  /* ── LOGIN MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 9000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.aktif { display: flex; }
+  .modal-box {
+    background: white;
+    border-radius: 16px;
+    padding: 36px 32px;
+    width: 90%;
+    max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: slideUp 0.3s ease;
+  }
+  .modal-box h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--teks);
+    margin-bottom: 6px;
+  }
+  .modal-box p {
+    font-size: 12px;
+    color: var(--abu);
+    margin-bottom: 20px;
+  }
+  .modal-input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    margin-bottom: 12px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+  }
+  .modal-input:focus { border-color: var(--hijau); }
+  .btn-modal-login {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--hijau), var(--emas));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-modal-login:hover { opacity: 0.9; transform: translateY(-1px); }
+  .modal-error {
+    background: #FEE2E2;
+    color: #C0392B;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    margin-bottom: 12px;
+    display: none;
+    text-align: center;
+  }
+  .btn-modal-batal {
+    width: 100%;
+    padding: 10px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--abu);
+    cursor: pointer;
+    margin-top: 8px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  /* ── AGENDA TERSEMBUNYI ── */
+  .agenda-locked {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    border: 2px dashed var(--emas);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 640px) {
     .topbar { padding: 0 16px; }
@@ -590,6 +681,22 @@
 
 
 <!-- ═══════════════ DASHBOARD ═══════════════ -->
+<!-- ═══ MODAL LOGIN ADMIN ═══ -->
+<div class="modal-overlay" id="modal-login">
+  <div class="modal-box">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="width:56px;height:56px;background:linear-gradient(135deg,#1D7A3A,#C8A400);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 12px">🔐</div>
+      <h3>Login Admin</h3>
+      <p>Masukkan username dan password untuk melihat info agenda akan datang</p>
+    </div>
+    <div class="modal-error" id="modal-error">Username atau password salah!</div>
+    <input class="modal-input" type="text" id="modal-user" placeholder="Username">
+    <input class="modal-input" type="password" id="modal-pass" placeholder="Password">
+    <button class="btn-modal-login" onclick="doModalLogin()">🔓 Masuk</button>
+    <button class="btn-modal-batal" onclick="tutupModal()">Batal</button>
+  </div>
+</div>
+
 <div id="dashboard">
   <!-- Topbar -->
   <div class="topbar">
@@ -654,11 +761,39 @@
     </div>
 
     <!-- Agenda Hari Ini -->
-    <div class="section-title">
-      📅 Agenda Hari Ini <span id="count-harini">0</span>
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>📅 Agenda Hari Ini <span id="count-harini">0</span></div>
     </div>
     <div class="agenda-grid" id="agenda-harini">
       <div class="loading"><div class="spinner"></div>Memuat agenda...</div>
+    </div>
+
+    <!-- Tombol Login/Logout Admin di bawah Agenda Hari Ini -->
+    <div id="box-login-admin" style="text-align:center;margin-bottom:28px">
+      <div id="area-login" style="background:white;border:2px dashed #C8A400;border-radius:14px;padding:20px;display:inline-block;min-width:300px">
+        <div style="font-size:13px;color:#6B7280;margin-bottom:12px">🔒 Login untuk melihat info agenda akan datang</div>
+        <button onclick="bukaModal()" style="
+          padding:11px 28px;
+          background:linear-gradient(135deg,#1D7A3A,#C8A400);
+          color:white;border:none;border-radius:10px;
+          font-size:13px;font-weight:700;cursor:pointer;
+          font-family:'Plus Jakarta Sans',sans-serif;
+          box-shadow:0 4px 12px rgba(29,122,58,0.25);
+          transition:all 0.2s;
+        " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+          🔐 Login untuk info agenda akan datang
+        </button>
+      </div>
+      <div id="area-logout" style="display:none;background:white;border:2px solid #1D7A3A;border-radius:14px;padding:16px;display:none;text-align:center">
+        <span style="font-size:13px;color:#1D7A3A;font-weight:600">👁 Mode Admin Aktif</span>
+        <button onclick="doLogoutAdmin()" style="
+          margin-left:16px;padding:8px 18px;
+          background:#FEE2E2;border:1px solid #C0392B;
+          color:#C0392B;border-radius:8px;
+          font-size:12px;font-weight:600;cursor:pointer;
+          font-family:'Plus Jakarta Sans',sans-serif;
+        ">🔓 Keluar Admin</button>
+      </div>
     </div>
 
     <!-- Kalender -->
@@ -708,6 +843,70 @@
 //  KONFIGURASI — ganti SCRIPT_ID dengan ID
 //  Web App Apps Script Anda setelah deploy
 // ═══════════════════════════════════════════
+// ═══ ADMIN LOGIN ═══
+const ADMIN_CRED = { user: "protokoldata", passHash: btoa("0987654321") };
+
+function isAdminLogin() {
+  return sessionStorage.getItem('adminLogin') === '1';
+}
+
+function bukaModal() {
+  document.getElementById('modal-login').classList.add('aktif');
+  document.getElementById('modal-user').value = '';
+  document.getElementById('modal-pass').value = '';
+  document.getElementById('modal-error').style.display = 'none';
+  setTimeout(() => document.getElementById('modal-user').focus(), 100);
+}
+
+function tutupModal() {
+  document.getElementById('modal-login').classList.remove('aktif');
+}
+
+function doModalLogin() {
+  const user = document.getElementById('modal-user').value.trim();
+  const pass  = document.getElementById('modal-pass').value;
+  const err   = document.getElementById('modal-error');
+
+  if (user === ADMIN_CRED.user && btoa(pass) === ADMIN_CRED.passHash) {
+    sessionStorage.setItem('adminLogin', '1');
+    tutupModal();
+    updateAdminBox();
+    tampilToast('✅ Login admin berhasil! Detail agenda akan datang sekarang terlihat.');
+    renderDashboard();
+  } else {
+    err.style.display = 'block';
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+}
+
+function doLogoutAdmin() {
+  sessionStorage.removeItem('adminLogin');
+  updateAdminBox();
+  tampilToast('👋 Keluar dari mode admin');
+  renderDashboard();
+}
+
+function updateAdminBox() {
+  const loginArea  = document.getElementById('area-login');
+  const logoutArea = document.getElementById('area-logout');
+  if (!loginArea || !logoutArea) return;
+  if (isAdminLogin()) {
+    loginArea.style.display  = 'none';
+    logoutArea.style.display = 'inline-block';
+  } else {
+    loginArea.style.display  = 'inline-block';
+    logoutArea.style.display = 'none';
+  }
+}
+
+// Enter key di modal
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('modal-login').classList.contains('aktif')) {
+    doModalLogin();
+  }
+  if (e.key === 'Escape') tutupModal();
+});
+
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRMQKl6ZXbJncuKa0rkxZke2RVFY4Jlhn2sVmc29mMYMk6l0tSKoQt7ERhWv9wdAFqYA/exec";
 
 
@@ -1042,10 +1241,16 @@ async function cekDataBaru() {
 
     // Cek apakah ada agenda baru
     if (jumlahDataSebelumnya !== -1) {
-      const agendaBaru = dataBaru.filter(r => !namaDataSebelumnya.has(r.nama + r.tanggal));
+      const sekarang = new Date();
+      const agendaBaru = dataBaru.filter(r => {
+        if (namaDataSebelumnya.has(r.nama + r.tanggal)) return false;
+        // Hanya notifikasi untuk agenda yang diinput hari ini atau kemarin
+        const tglAgenda = new Date(r.tanggal);
+        const selisihHari = (sekarang - tglAgenda) / (1000 * 60 * 60 * 24);
+        return selisihHari <= 1;
+      });
 
       if (agendaBaru.length > 0) {
-        // Tampilkan notifikasi untuk setiap agenda baru
         agendaBaru.forEach(r => tampilNotifikasi(r));
 
         // Update data dan render ulang
@@ -1189,6 +1394,7 @@ document.head.appendChild(styleEl);
 
 // ── LANGSUNG TAMPIL DASHBOARD ──
 initDashboard();
+setTimeout(updateAdminBox, 500);
 
 // Aktifkan realtime setelah load
 setTimeout(() => {
